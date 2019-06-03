@@ -3,8 +3,9 @@
     <div class="title has-grey-background"><h1>Aleksey's Challenge</h1></div>
     <div id="user-input-container" class="user-input">
         <prism-editor :lineNumbers="true" v-model.trim="code" :code="code" language="js"></prism-editor>
+        <div id="handle" class="fa fa-arrows-v"> </div>
     </div>
-    <div id="chart-container" class="chart">
+    <div id="chart-container" style="height:400px" class="chart">
       <apexchart width="100%" height="100%"  type="line" :options="options" :series="series"></apexchart>
     </div>
     <div class="footer has-grey-background">
@@ -17,11 +18,11 @@
 import "prismjs";
 import "prismjs/themes/prism-darkula.css";
 import "vue-prism-editor/dist/VuePrismEditor.css"; 
-
 import VueApexCharts from 'vue-apexcharts'
 import PrismEditor from 'vue-prism-editor'
 import JSON5 from 'json5' //For parsing Relaxed JSON strings, so we can use parse input without "" onto keys.
 import interact from 'interactjs'
+import moment from 'moment'
 
 export default {
   name: 'app',
@@ -40,8 +41,18 @@ export default {
 {type: 'data', timestamp: 1519780251002, os: 'mac', browser: 'firefox', min_response_time: 0.5, max_response_time: 1.7}
 {type: 'stop', timestamp: 1529780251293}`,
       options:{
+        states: {
+            hover: {
+                filter: {
+                    type: 'none',
+                }
+            },
+        },
         selection: {
           enabled: false,
+        },
+        tooltip:{
+          enabled:false
         },
         zoom:{
           enabled:false,
@@ -57,7 +68,10 @@ export default {
         },
         xaxis: {
           labels: {
-             format: 'ss',
+            type:'datetime',
+            formatter: function(value, timestamp, index) {
+              return moment(new Date(timestamp)).format("mm[:]ss")
+            }
          }
       },
         chart: {
@@ -71,9 +85,9 @@ export default {
     }
   },
   created(){
-    interact('#chart-container').resizable({
+    interact('#user-input-container').resizable({
       edges: {
-        top:true
+        bottom:'#handle'
       }
     }).on('resizemove',event => {
     Object.assign(event.target.style, {
@@ -141,7 +155,7 @@ export default {
                  if(!chartSeries.hasOwnProperty(seriesName)){
                    chartSeries[seriesName] = []; //If there is not a property with this name yet, set an array on this property
                  }
-                  chartSeries[seriesName].push(event[sel]);
+                  chartSeries[seriesName].push([event.timestamp,event[sel]]);
                 })
             })
         for (var property in chartSeries) {
@@ -169,12 +183,33 @@ export default {
 <style>
  @import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap');
  @import url('https://fonts.googleapis.com/css?family=Source+Code+Pro&display=swap');
+@import url('https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
 
 #chart-container{
-  height: 500px;
   touch-action:none;
   flex:1 1 auto;
   box-sizing: border-box;
+  margin-bottom:63px;
+}
+#handle{
+  background-color:black;
+  color:#2E3440;
+  font-size: 18px;
+  padding:5px 10px;
+  border-radius: 5px;
+  text-align: center;
+  position:absolute;
+  left:calc(50% - 10px);
+  bottom: -13px;
+  z-index: 2;
+}
+#handle:hover{
+  background-color:#2E3440;
+  color:black;
+}
+#user-input-container{
+  flex:1 1 auto;
+  position: relative;
 }
 .title{
   padding:10px;
@@ -202,6 +237,9 @@ export default {
 .generate-btn{
   background-color:#017EFF;
   padding:10px 15px;
+  font-size: 16px;
+  text-transform: uppercase;
+  border-radius: 3px;
   color:white;
   border:none;
   transition: all 0.3s ease;
